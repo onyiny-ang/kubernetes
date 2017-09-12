@@ -40,7 +40,7 @@ func GetRunOptions() *options.ServerRunOptions {
 	// Use a unique prefix to ensure isolation from other tests using the same etcd instance
 	r.Etcd.StorageConfig.Prefix = uuid.New()
 	// Disable secure serving
-	r.SecureServing.BindPort = 0
+	r.SecureServing.BindPort = 1
 	return r
 }
 
@@ -70,7 +70,7 @@ func (f *FederationAPIFixture) SetUpWithRunOptions(t *testing.T, runOptions *opt
 		t.Fatal(err)
 	}
 
-	f.Host = fmt.Sprintf("http://%s:%d", runOptions.InsecureServing.BindAddress, runOptions.InsecureServing.BindPort)
+	f.Host = fmt.Sprintf("http://%s:%d", runOptions.SecureServing.BindAddress, runOptions.SecureServing.BindPort)
 
 	err = waitForServer(t, f.Host)
 	if err != nil {
@@ -103,7 +103,7 @@ func startServer(t *testing.T, runOptions *options.ServerRunOptions, stopChan <-
 			return false, nil
 		}
 
-		runOptions.InsecureServing.BindPort = port
+		runOptions.SecureServing.BindPort = port
 		err = app.NonBlockingRun(runOptions, stopChan)
 		if err != nil {
 			t.Logf("Error starting the %s: %v", apiNoun, err)
