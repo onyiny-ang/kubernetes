@@ -16,224 +16,220 @@ limitations under the License.
 
 package kubectl
 
-import (
-	"reflect"
-	"testing"
+//import (
+//	"testing"
+//federationapi "k8s.io/kubernetes/federation/apis/federation/v1beta1"
+//)
 
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	federationapi "k8s.io/kubernetes/federation/apis/federation/v1beta1"
-)
-
-func TestClusterGenerate(t *testing.T) {
-	tests := []struct {
-		params    map[string]interface{}
-		expected  *federationapi.Cluster
-		expectErr bool
-	}{
-		{
-			params: map[string]interface{}{
-				"name":           "foo",
-				"client-cidr":    "0.0.0.0/0",
-				"server-address": "10.20.30.40",
-				"secret":         "foo-credentials",
-			},
-			expected: &federationapi.Cluster{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "foo",
-				},
-				Spec: federationapi.ClusterSpec{
-					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
-						{
-							ClientCIDR:    "0.0.0.0/0",
-							ServerAddress: "10.20.30.40",
-						},
-					},
-					SecretRef: &v1.LocalObjectReference{
-						Name: "foo-credentials",
-					},
-				},
-			},
-			expectErr: false,
-		},
-		{
-			params: map[string]interface{}{
-				"name":           "foo",
-				"client-cidr":    "10.20.30.40/16",
-				"server-address": "https://foo.example.com",
-				"secret":         "foo-credentials",
-			},
-			expected: &federationapi.Cluster{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "foo",
-				},
-				Spec: federationapi.ClusterSpec{
-					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
-						{
-							ClientCIDR:    "10.20.30.40/16",
-							ServerAddress: "https://foo.example.com",
-						},
-					},
-					SecretRef: &v1.LocalObjectReference{
-						Name: "foo-credentials",
-					},
-				},
-			},
-			expectErr: false,
-		},
-		{
-			params: map[string]interface{}{
-				"name":           "bar-cluster",
-				"client-cidr":    "10.20.30.40/16",
-				"server-address": "http://10.20.30.40",
-				"secret":         "credentials",
-			},
-			expected: &federationapi.Cluster{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "bar-cluster",
-				},
-				Spec: federationapi.ClusterSpec{
-					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
-						{
-							ClientCIDR:    "10.20.30.40/16",
-							ServerAddress: "http://10.20.30.40",
-						},
-					},
-					SecretRef: &v1.LocalObjectReference{
-						Name: "credentials",
-					},
-				},
-			},
-			expectErr: false,
-		},
-		{
-			params: map[string]interface{}{
-				"name":           "bar-cluster",
-				"client-cidr":    "10.20.30.40/16",
-				"server-address": "http://10.20.30.40",
-				"secret":         "credentials",
-			},
-			expected: &federationapi.Cluster{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "bar-cluster",
-				},
-				Spec: federationapi.ClusterSpec{
-					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
-						{
-							ClientCIDR:    "10.20.30.40/16",
-							ServerAddress: "http://10.20.30.40",
-						},
-					},
-					SecretRef: &v1.LocalObjectReference{
-						Name: "credentials",
-					},
-				},
-			},
-			expectErr: false,
-		},
-		{
-			params: map[string]interface{}{
-				"name":                 "bar-cluster",
-				"client-cidr":          "10.20.30.40/16",
-				"server-address":       "http://10.20.30.40",
-				"secret":               "credentials",
-				"service-account-name": "service-account",
-				"cluster-role-name":    "cluster-role",
-			},
-			expected: &federationapi.Cluster{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "bar-cluster",
-					Annotations: map[string]string{
-						ServiceAccountNameAnnotation: "service-account",
-						ClusterRoleNameAnnotation:    "cluster-role",
-					},
-				},
-				Spec: federationapi.ClusterSpec{
-					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
-						{
-							ClientCIDR:    "10.20.30.40/16",
-							ServerAddress: "http://10.20.30.40",
-						},
-					},
-					SecretRef: &v1.LocalObjectReference{
-						Name: "credentials",
-					},
-				},
-			},
-			expectErr: false,
-		},
-		{
-			params: map[string]interface{}{
-				"server-address": "https://10.20.30.40",
-			},
-			expected:  nil,
-			expectErr: true,
-		},
-		{
-			params: map[string]interface{}{
-				"secret": "baz-credentials",
-			},
-			expected:  nil,
-			expectErr: true,
-		},
-		{
-			params: map[string]interface{}{
-				"server-address": "http://foo.example.com",
-				"secret":         "foo-credentials",
-			},
-			expected:  nil,
-			expectErr: true,
-		},
-		{
-			params: map[string]interface{}{
-				"name":   "foo",
-				"secret": "foo-credentials",
-			},
-			expected:  nil,
-			expectErr: true,
-		},
-		{
-			params: map[string]interface{}{
-				"name":        "foo",
-				"client-cidr": "10.20.30.40/16",
-			},
-			expected:  nil,
-			expectErr: true,
-		},
-		{
-			params: map[string]interface{}{
-				"name":              "bar-cluster",
-				"client-cidr":       "10.20.30.40/16",
-				"server-address":    "http://10.20.30.40",
-				"secret":            "credentials",
-				"cluster-role-name": "cluster-role",
-			},
-			expected:  nil,
-			expectErr: true,
-		},
-		{
-			params: map[string]interface{}{
-				"name":                 "bar-cluster",
-				"client-cidr":          "10.20.30.40/16",
-				"server-address":       "http://10.20.30.40",
-				"secret":               "credentials",
-				"service-account-name": "service-account",
-			},
-			expected:  nil,
-			expectErr: true,
-		},
-	}
-	generator := ClusterGeneratorV1Beta1{}
-	for i, test := range tests {
-		obj, err := generator.Generate(test.params)
-		if !test.expectErr && err != nil {
-			t.Errorf("[%d] unexpected error: %v", i, err)
-		}
-		if test.expectErr && err != nil {
-			continue
-		}
-		if !reflect.DeepEqual(obj.(*federationapi.Cluster), test.expected) {
-			t.Errorf("\n[%d] want:\n%#v\n[%d] got:\n%#v", i, test.expected, i, obj.(*federationapi.Cluster))
-		}
-	}
-}
+//func TestClusterGenerate(t *testing.T) {
+//	tests := []struct {
+//		params map[string]interface{}
+//		expected  *federationapi.Cluster
+//		expectErr bool
+//	}{
+//		{
+//			params: map[string]interface{}{
+//				"name":           "foo",
+//				"client-cidr":    "0.0.0.0/0",
+//				"server-address": "10.20.30.40",
+//				"secret":         "foo-credentials",
+//			},
+//			expected: &federationapi.Cluster{
+//				ObjectMeta: metav1.ObjectMeta{
+//					Name: "foo",
+//				},
+//				Spec: federationapi.ClusterSpec{
+//					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
+//						{
+//							ClientCIDR:    "0.0.0.0/0",
+//							ServerAddress: "10.20.30.40",
+//						},
+//					},
+//					SecretRef: &v1.LocalObjectReference{
+//						Name: "foo-credentials",
+//					},
+//				},
+//			},
+//			expectErr: false,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"name":           "foo",
+//				"client-cidr":    "10.20.30.40/16",
+//				"server-address": "https://foo.example.com",
+//				"secret":         "foo-credentials",
+//			},
+//			expected: &federationapi.Cluster{
+//				ObjectMeta: metav1.ObjectMeta{
+//					Name: "foo",
+//				},
+//				Spec: federationapi.ClusterSpec{
+//					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
+//						{
+//							ClientCIDR:    "10.20.30.40/16",
+//							ServerAddress: "https://foo.example.com",
+//						},
+//					},
+//					SecretRef: &v1.LocalObjectReference{
+//						Name: "foo-credentials",
+//					},
+//				},
+//			},
+//			expectErr: false,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"name":           "bar-cluster",
+//				"client-cidr":    "10.20.30.40/16",
+//				"server-address": "http://10.20.30.40",
+//				"secret":         "credentials",
+//			},
+//			expected: &federationapi.Cluster{
+//				ObjectMeta: metav1.ObjectMeta{
+//					Name: "bar-cluster",
+//				},
+//				Spec: federationapi.ClusterSpec{
+//					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
+//						{
+//							ClientCIDR:    "10.20.30.40/16",
+//							ServerAddress: "http://10.20.30.40",
+//						},
+//					},
+//					SecretRef: &v1.LocalObjectReference{
+//						Name: "credentials",
+//					},
+//				},
+//			},
+//			expectErr: false,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"name":           "bar-cluster",
+//				"client-cidr":    "10.20.30.40/16",
+//				"server-address": "http://10.20.30.40",
+//				"secret":         "credentials",
+//			},
+//			expected: &federationapi.Cluster{
+//				ObjectMeta: metav1.ObjectMeta{
+//					Name: "bar-cluster",
+//				},
+//				Spec: federationapi.ClusterSpec{
+//					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
+//						{
+//							ClientCIDR:    "10.20.30.40/16",
+//							ServerAddress: "http://10.20.30.40",
+//						},
+//					},
+//					SecretRef: &v1.LocalObjectReference{
+//						Name: "credentials",
+//					},
+//				},
+//			},
+//			expectErr: false,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"name":                 "bar-cluster",
+//				"client-cidr":          "10.20.30.40/16",
+//				"server-address":       "http://10.20.30.40",
+//				"secret":               "credentials",
+//				"service-account-name": "service-account",
+//				"cluster-role-name":    "cluster-role",
+//			},
+//			expected: &federationapi.Cluster{
+//				ObjectMeta: metav1.ObjectMeta{
+//					Name: "bar-cluster",
+//					Annotations: map[string]string{
+//						ServiceAccountNameAnnotation: "service-account",
+//						ClusterRoleNameAnnotation:    "cluster-role",
+//					},
+//				},
+//				Spec: federationapi.ClusterSpec{
+//					ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
+//						{
+//							ClientCIDR:    "10.20.30.40/16",
+//							ServerAddress: "http://10.20.30.40",
+//						},
+//					},
+//					SecretRef: &v1.LocalObjectReference{
+//						Name: "credentials",
+//					},
+//				},
+//			},
+//			expectErr: false,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"server-address": "https://10.20.30.40",
+//			},
+//			expected:  nil,
+//			expectErr: true,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"secret": "baz-credentials",
+//			},
+//			expected:  nil,
+//			expectErr: true,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"server-address": "http://foo.example.com",
+//				"secret":         "foo-credentials",
+//			},
+//			expected:  nil,
+//			expectErr: true,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"name":   "foo",
+//				"secret": "foo-credentials",
+//			},
+//			expected:  nil,
+//			expectErr: true,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"name":        "foo",
+//				"client-cidr": "10.20.30.40/16",
+//			},
+//			expected:  nil,
+//			expectErr: true,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"name":              "bar-cluster",
+//				"client-cidr":       "10.20.30.40/16",
+//				"server-address":    "http://10.20.30.40",
+//				"secret":            "credentials",
+//				"cluster-role-name": "cluster-role",
+//			},
+//			expected:  nil,
+//			expectErr: true,
+//		},
+//		{
+//			params: map[string]interface{}{
+//				"name":                 "bar-cluster",
+//				"client-cidr":          "10.20.30.40/16",
+//				"server-address":       "http://10.20.30.40",
+//				"secret":               "credentials",
+//				"service-account-name": "service-account",
+//			},
+//			expected:  nil,
+//			expectErr: true,
+//		},
+//	}
+//	generator := ClusterGeneratorV1Beta1{}
+//	for i, test := range tests {
+//		obj, err := generator.Generate(test.params)
+//		if !test.expectErr && err != nil {
+//			t.Errorf("[%d] unexpected error: %v", i, err)
+//		}
+//		if test.expectErr && err != nil {
+//			continue
+//		}
+//		if !reflect.DeepEqual(obj.(*federationapi.Cluster), test.expected) {
+//			t.Errorf("\n[%d] want:\n%#v\n[%d] got:\n%#v", i, test.expected, i, obj.(*federationapi.Cluster))
+//		}
+//	}
+//}

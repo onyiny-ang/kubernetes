@@ -38,7 +38,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/rest/fake"
 	openapi "k8s.io/kube-openapi/pkg/util/proto"
-	fedclientset "k8s.io/kubernetes/federation/client/clientset_generated/federation_clientset"
+	//	fedclientset "k8s.io/kubernetes/federation/client/clientset_generated/federation_clientset"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
@@ -332,12 +332,12 @@ func (f *FakeFactory) ClientForMapping(mapping *meta.RESTMapping) (resource.REST
 	return f.tf.Client, f.tf.Err
 }
 
-func (f *FakeFactory) FederationClientSetForVersion(version *schema.GroupVersion) (fedclientset.Interface, error) {
-	return nil, nil
-}
-func (f *FakeFactory) FederationClientForVersion(version *schema.GroupVersion) (*restclient.RESTClient, error) {
-	return nil, nil
-}
+//func (f *FakeFactory) FederationClientSetForVersion(version *schema.GroupVersion) (fedclientset.Interface, error) {
+//	return nil, nil
+//}
+//func (f *FakeFactory) FederationClientForVersion(version *schema.GroupVersion) (*restclient.RESTClient, error) {
+//	return nil, nil
+//}
 func (f *FakeFactory) ClientSetForVersion(requiredVersion *schema.GroupVersion) (internalclientset.Interface, error) {
 	return nil, nil
 }

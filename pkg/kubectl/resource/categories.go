@@ -181,8 +181,8 @@ var LegacyCategoryExpander CategoryExpander = SimpleCategoryExpander{
 }
 
 // LegacyFederationCategoryExpander is the old hardcoded expansion for federation
-var LegacyFederationCategoryExpander CategoryExpander = SimpleCategoryExpander{
-	Expansions: map[string][]schema.GroupResource{
-		"all": {{Group: "", Resource: "services"}},
-	},
-}
+//var LegacyFederationCategoryExpander CategoryExpander = SimpleCategoryExpander{
+//	Expansions: map[string][]schema.GroupResource{
+//		"all": {{Group: "", Resource: "services"}},
+//	},
+//}

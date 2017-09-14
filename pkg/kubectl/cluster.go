@@ -16,144 +16,137 @@ limitations under the License.
 
 package kubectl
 
-import (
-	"fmt"
+//	federationapi "k8s.io/kubernetes/federation/apis/federation/v1beta1"
 
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	federationapi "k8s.io/kubernetes/federation/apis/federation/v1beta1"
-)
-
-const (
-	ServiceAccountNameAnnotation = "federation.kubernetes.io/servive-account-name"
-	ClusterRoleNameAnnotation    = "federation.kubernetes.io/cluster-role-name"
-)
+//const (
+//	ServiceAccountNameAnnotation = "federation.kubernetes.io/servive-account-name"
+//	ClusterRoleNameAnnotation    = "federation.kubernetes.io/cluster-role-name"
+//)
 
 // ClusterGeneratorV1Beta1 supports stable generation of a
 // federation/cluster resource.
-type ClusterGeneratorV1Beta1 struct {
-	// Name of the cluster context (required)
-	Name string
-	// ClientCIDR is the CIDR range in which the Kubernetes APIServer
-	// is available for the client (optional)
-	ClientCIDR string
-	// ServerAddress is the APIServer address of the Kubernetes cluster
-	// that is being registered (required)
-	ServerAddress string
-	// SecretName is the name of the secret that stores the credentials
-	// for the Kubernetes cluster that is being registered (optional)
-	SecretName string
-	// ServiceAccountName is the name of the service account that is
-	// created in the cluster being registered. If this is provided,
-	// then ClusterRoleName must also be provided (optional)
-	ServiceAccountName string
-	// ClusterRoleName is the name of the cluster role and cluster role
-	// binding that are created in the cluster being registered. If this
-	// is provided, then ServiceAccountName must also be provided
-	// (optional)
-	ClusterRoleName string
-}
+//type ClusterGeneratorV1Beta1 struct {
+// Name of the cluster context (required)
+//	Name string
+// ClientCIDR is the CIDR range in which the Kubernetes APIServer
+// is available for the client (optional)
+//	ClientCIDR string
+// ServerAddress is the APIServer address of the Kubernetes cluster
+// that is being registered (required)
+//	ServerAddress string
+// SecretName is the name of the secret that stores the credentials
+// for the Kubernetes cluster that is being registered (optional)
+//	SecretName string
+// ServiceAccountName is the name of the service account that is
+// created in the cluster being registered. If this is provided,
+// then ClusterRoleName must also be provided (optional)
+//	ServiceAccountName string
+// ClusterRoleName is the name of the cluster role and cluster role
+// binding that are created in the cluster being registered. If this
+// is provided, then ServiceAccountName must also be provided
+// (optional)
+//	ClusterRoleName string
+//}
 
 // Ensure it supports the generator pattern that uses parameter
 // injection.
-var _ Generator = &ClusterGeneratorV1Beta1{}
+//var _ Generator = &ClusterGeneratorV1Beta1{}
 
 // Ensure it supports the generator pattern that uses parameters
 // specified during construction.
-var _ StructuredGenerator = &ClusterGeneratorV1Beta1{}
+//var _ StructuredGenerator = &ClusterGeneratorV1Beta1{}
 
 // Generate returns a cluster resource using the specified parameters.
-func (s ClusterGeneratorV1Beta1) Generate(genericParams map[string]interface{}) (runtime.Object, error) {
-	err := ValidateParams(s.ParamNames(), genericParams)
-	if err != nil {
-		return nil, err
-	}
-	clustergen := &ClusterGeneratorV1Beta1{}
-	params := map[string]string{}
-	for key, value := range genericParams {
-		strVal, isString := value.(string)
-		if !isString {
-			return nil, fmt.Errorf("expected string, saw %v for '%s'", value, key)
-		}
-		params[key] = strVal
-	}
-	clustergen.Name = params["name"]
-	clustergen.ClientCIDR = params["client-cidr"]
-	clustergen.ServerAddress = params["server-address"]
-	clustergen.SecretName = params["secret"]
-	clustergen.ServiceAccountName = params["service-account-name"]
-	clustergen.ClusterRoleName = params["cluster-role-name"]
-	return clustergen.StructuredGenerate()
-}
+//func (s ClusterGeneratorV1Beta1) Generate(genericParams map[string]interface{}) (runtime.Object, error) {
+//	err := ValidateParams(s.ParamNames(), genericParams)
+//	if err != nil {
+//		return nil, err
+//	}
+//	clustergen := &ClusterGeneratorV1Beta1{}
+//	params := map[string]string{}
+//	for key, value := range genericParams {
+//		strVal, isString := value.(string)
+//		if !isString {
+//			return nil, fmt.Errorf("expected string, saw %v for '%s'", value, key)
+//		}
+//		params[key] = strVal
+//	}
+//	clustergen.Name = params["name"]
+//	clustergen.ClientCIDR = params["client-cidr"]
+//	clustergen.ServerAddress = params["server-address"]
+//	clustergen.SecretName = params["secret"]
+//	clustergen.ServiceAccountName = params["service-account-name"]
+//	clustergen.ClusterRoleName = params["cluster-role-name"]
+//	return clustergen.StructuredGenerate()
+//}
 
 // ParamNames returns the set of supported input parameters when using
 // the parameter injection generator pattern.
-func (s ClusterGeneratorV1Beta1) ParamNames() []GeneratorParam {
-	return []GeneratorParam{
-		{"name", true},
-		{"client-cidr", false},
-		{"server-address", true},
-		{"secret", false},
-		{"service-account-name", false},
-		{"cluster-role-name", false},
-	}
-}
+//func (s ClusterGeneratorV1Beta1) ParamNames() []GeneratorParam {
+//	return []GeneratorParam{
+//		{"name", true},
+//		{"client-cidr", false},
+//		{"server-address", true},
+//		{"secret", false},
+//		{"service-account-name", false},
+//		{"cluster-role-name", false},
+//	}
+//}
 
 // StructuredGenerate outputs a federation cluster resource object
 // using the configured fields.
-func (s ClusterGeneratorV1Beta1) StructuredGenerate() (runtime.Object, error) {
-	if err := s.validate(); err != nil {
-		return nil, err
-	}
-	if s.ClientCIDR == "" {
-		s.ClientCIDR = "0.0.0.0/0"
-	}
-	if s.SecretName == "" {
-		s.SecretName = s.Name
-	}
-	cluster := &federationapi.Cluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: s.Name,
-		},
-		Spec: federationapi.ClusterSpec{
-			ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
-				{
-					ClientCIDR:    s.ClientCIDR,
-					ServerAddress: s.ServerAddress,
-				},
-			},
-			SecretRef: &v1.LocalObjectReference{
-				Name: s.SecretName,
-			},
-		},
-	}
-
-	annotations := make(map[string]string)
-	if s.ServiceAccountName != "" {
-		annotations[ServiceAccountNameAnnotation] = s.ServiceAccountName
-	}
-	if s.ClusterRoleName != "" {
-		annotations[ClusterRoleNameAnnotation] = s.ClusterRoleName
-	}
-	if len(annotations) == 1 {
-		return nil, fmt.Errorf("Either both or neither of ServiceAccountName and ClusterRoleName must be provided.")
-	}
-	if len(annotations) > 0 {
-		cluster.SetAnnotations(annotations)
-	}
-
-	return cluster, nil
-}
+//func (s ClusterGeneratorV1Beta1) StructuredGenerate() (runtime.Object, error) {
+//	if err := s.validate(); err != nil {
+//		return nil, err
+//	}
+//	if s.ClientCIDR == "" {
+//		s.ClientCIDR = "0.0.0.0/0"
+//	}
+//	if s.SecretName == "" {
+//		s.SecretName = s.Name
+//	}
+//	cluster := &federationapi.Cluster{
+//		ObjectMeta: metav1.ObjectMeta{
+//			Name: s.Name,
+//		},
+//		Spec: federationapi.ClusterSpec{
+//			ServerAddressByClientCIDRs: []federationapi.ServerAddressByClientCIDR{
+//				{
+//					ClientCIDR:    s.ClientCIDR,
+//					ServerAddress: s.ServerAddress,
+//				},
+//			},
+//			SecretRef: &v1.LocalObjectReference{
+//				Name: s.SecretName,
+//			},
+//		},
+//	}
+//
+//	annotations := make(map[string]string)
+//	if s.ServiceAccountName != "" {
+//		annotations[ServiceAccountNameAnnotation] = s.ServiceAccountName
+//	}
+//	if s.ClusterRoleName != "" {
+//		annotations[ClusterRoleNameAnnotation] = s.ClusterRoleName
+//	}
+//	if len(annotations) == 1 {
+//		return nil, fmt.Errorf("Either both or neither of ServiceAccountName and ClusterRoleName must be provided.")
+//	}
+//	if len(annotations) > 0 {
+//		cluster.SetAnnotations(annotations)
+//	}
+//
+//	return cluster, nil
+//}
 
 // validate validates required fields are set to support structured
 // generation.
-func (s ClusterGeneratorV1Beta1) validate() error {
-	if len(s.Name) == 0 {
-		return fmt.Errorf("name must be specified")
-	}
-	if len(s.ServerAddress) == 0 {
-		return fmt.Errorf("server address must be specified")
-	}
-	return nil
-}
+//func (s ClusterGeneratorV1Beta1) validate() error {
+//	if len(s.Name) == 0 {
+//		return fmt.Errorf("name must be specified")
+//	}
+//	if len(s.ServerAddress) == 0 {
+//		return fmt.Errorf("server address must be specified")
+//	}
+//	return nil
+//}
